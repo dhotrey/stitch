@@ -21,12 +21,18 @@ func main() {
 	log.Info("Starting Ares . . . ")
 	log.Info("Ares is running in ", "mode", log.GetLevel())
 	log.Info("Setting chunk size", "chunkSize", CHUNK_SIZE)
-	data := utils.GetData()
+	data, err := utils.GetData()
+	if err != nil {
+		log.Error("Something went wrong fetching the data", "Error", err)
+	}
 	log.Info("Got file successfully", "filename", data.FileName)
 	log.Info("initial file size", "initialFilesize", data.InitialSize)
+	data.OrignalDataSHA256 = utils.GetSHA256(data.Data)
+	log.Info("Calculating SHA256 of uncompressed data", "hash", data.OrignalDataSHA256)
 	log.Info("Compressing data . . ")
-	data.CompressedData = xz.Compress(data.Data)
+	data.CompressedData = xz.Squish(data.Data)
+	data.CompressedDataSHA256 = utils.GetSHA256(data.CompressedData)
 	log.Debug("raw size of compressed data", "size", len(data.CompressedData))
 	log.Info("Size of compressed data", "size", utils.HumanFilesize(len(data.CompressedData)))
-
+	log.Info("SHA256 of compressed data", "compressedDataHash", data.CompressedDataSHA256)
 }
