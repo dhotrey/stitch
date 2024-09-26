@@ -8,7 +8,7 @@ import (
 	"github.com/ulikunitz/xz"
 )
 
-func Compress(data []byte) []byte {
+func Squish(data []byte) []byte {
 	var buf bytes.Buffer
 
 	w, err := xz.NewWriter(&buf)
@@ -24,6 +24,16 @@ func Compress(data []byte) []byte {
 	return buf.Bytes()
 }
 
-func Decompress() {
-
+func UnSquish(data []byte) []byte {
+	var buf bytes.Buffer
+	var out bytes.Buffer
+	buf.Write(data)
+	r, err := xz.NewReader(&buf)
+	if err != nil {
+		log.Fatalf("NewReader error %s", err)
+	}
+	if _, err = io.Copy(&out, r); err != nil {
+		log.Fatalf("io.Copy error %s", err)
+	}
+	return out.Bytes()
 }
