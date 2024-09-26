@@ -1,4 +1,4 @@
-package xz
+package squish
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"github.com/ulikunitz/xz"
 )
 
-func Squish(data []byte) []byte {
+func Squash(data []byte) []byte {
 	var buf bytes.Buffer
 
 	w, err := xz.NewWriter(&buf)

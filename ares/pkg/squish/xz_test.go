@@ -1,4 +1,4 @@
-package xz
+package squish
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ func TestDecompress(t *testing.T) {
 		}
 		orignalHash := utils.GetSHA256(data.Data)
 		t.Log("orignalHash", orignalHash)
-		compressedData := Squish(data.Data)
+		compressedData := Squash(data.Data)
 		decomp := UnSquish(compressedData)
 		decompHash := utils.GetSHA256(decomp)
 		t.Log("Hash after decompressing", decompHash)

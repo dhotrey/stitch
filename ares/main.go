@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/charmbracelet/log"
-	"github.com/theredditbandit/stitch/ares/pkg/xz"
+	"github.com/theredditbandit/stitch/ares/pkg/squish"
 	"github.com/theredditbandit/stitch/ares/utils"
 )
 
@@ -30,9 +30,10 @@ func main() {
 	data.OrignalDataSHA256 = utils.GetSHA256(data.Data)
 	log.Info("Calculating SHA256 of uncompressed data", "hash", data.OrignalDataSHA256)
 	log.Info("Compressing data . . ")
-	data.CompressedData = xz.Squish(data.Data)
+	data.CompressedData = squish.Squash(data.Data)
 	data.CompressedDataSHA256 = utils.GetSHA256(data.CompressedData)
 	log.Debug("raw size of compressed data", "size", len(data.CompressedData))
 	log.Info("Size of compressed data", "size", utils.HumanFilesize(len(data.CompressedData)))
 	log.Info("SHA256 of compressed data", "compressedDataHash", data.CompressedDataSHA256)
+
 }
