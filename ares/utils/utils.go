@@ -2,18 +2,21 @@ package utils
 
 import (
 	"fmt"
+	"math"
 	"os"
 
 	"github.com/charmbracelet/log"
 )
 
 type Data struct {
-	Data             []byte
-	CompressedData   []byte
-	FileName         string
-	InitialSize      string
-	CompressedSize   string
-	CompressionRatio int
+	Data                []byte
+	CompressedData      []byte
+	FileName            string
+	InitialSize         string
+	CompressedSize      string
+	CompressionRatio    int
+	UncompressedDataSha string
+	CompressedDataSha   string
 }
 
 func getBeeMovieScript() []byte {
@@ -37,6 +40,8 @@ func GetData() Data {
 		}
 		log.Debug("Filesize using os.Stat method", "size", fileInfo.Size())
 	}
+	log.Debug("Human readable filesize", "size", HumanFilesize(len(d.Data)))
+	d.InitialSize = HumanFilesize(len(d.Data))
 	return d
 }
 
@@ -50,4 +55,14 @@ func GetLogo() string {
 
     `
 	return logo
+}
+
+func HumanFilesize(size int) string {
+	if size < 1000 {
+		return fmt.Sprintf("%d B", size)
+	}
+	suffixes := []string{"B", "KB", "MB", "GB", "TB"}
+	base := math.Floor(math.Log(float64(size)) / math.Log(1000))
+	newSize := float64(size) / math.Pow(1000, base)
+	return fmt.Sprintf("%.1f %s", newSize, suffixes[int(base)])
 }
