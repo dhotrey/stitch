@@ -2,7 +2,10 @@ module github.com/theredditbandit/stitch/ares
 
 go 1.22.0
 
-require github.com/charmbracelet/log v0.4.0
+require (
+	github.com/charmbracelet/log v0.4.0
+	github.com/ulikunitz/xz v0.5.12
+)
 
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
@@ -14,7 +17,6 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/ulikunitz/xz v0.5.12 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/sys v0.13.0 // indirect
 )
