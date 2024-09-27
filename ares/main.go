@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/charmbracelet/log"
+	"github.com/theredditbandit/stitch/ares/pkg/shredder"
 	"github.com/theredditbandit/stitch/ares/pkg/squish"
 	"github.com/theredditbandit/stitch/ares/utils"
 )
@@ -35,5 +36,18 @@ func main() {
 	log.Debug("raw size of compressed data", "size", len(data.CompressedData))
 	log.Info("Size of compressed data", "size", utils.HumanFilesize(len(data.CompressedData)))
 	log.Info("SHA256 of compressed data", "compressedDataHash", data.CompressedDataSHA256)
+
+	log.Info("Chunking the data into chunks of", "size", CHUNK_SIZE)
+	chunks := shredder.Shred(CHUNK_SIZE, data.CompressedData)
+	log.Info("Data split up into chunks", "numberOfChunks", len(chunks))
+
+	if log.GetLevel() == log.DebugLevel {
+		log.Debug("verifying chunking . . .")
+		log.Debug("Size of last chunk", "lastChunkSize", len(chunks[len(chunks)-1]))
+		formulaCalculation := CHUNK_SIZE*(len(chunks)-1) + len(chunks[len(chunks)-1])
+		log.Debug("verifying ", "formula", "chunkSize * (numberOfChunks -1) + lastChunkSize == compressedDataSize")
+		log.Debug("verifying", "formulaCalculation", formulaCalculation, "compressedDataSize", len(data.CompressedData))
+		log.Debug("verifying", "verificationSuccessful", formulaCalculation == len(data.CompressedData))
+	}
 
 }
