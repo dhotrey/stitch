@@ -18,6 +18,8 @@ type Data struct {
 	CompressionRatio     int
 	OrignalDataSHA256    string
 	CompressedDataSHA256 string
+	ChunkSize            int
+	DataChunks           [][]byte
 }
 
 func getBeeMovieScript() ([]byte, error) {

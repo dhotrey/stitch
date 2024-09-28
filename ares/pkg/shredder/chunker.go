@@ -1,16 +1,21 @@
 package shredder
 
-func Shred(chunkSize int, data []byte) [][]byte {
+import "github.com/theredditbandit/stitch/ares/utils"
+
+func Shred(dataStruct utils.Data) [][]byte {
+	compressedBinaryData := dataStruct.CompressedData
+	chunkSize := dataStruct.ChunkSize
+
 	offset := 0
-	dataSize := len(data)
+	dataSize := len(compressedBinaryData)
 	chunks := [][]byte{}
 	for {
 		if offset+chunkSize > dataSize {
-			piece := data[offset:]
+			piece := compressedBinaryData[offset:]
 			chunks = append(chunks, piece)
 			break
 		}
-		piece := data[0:chunkSize]
+		piece := compressedBinaryData[offset : offset+chunkSize]
 		chunks = append(chunks, piece)
 		offset += chunkSize
 	}
@@ -18,6 +23,11 @@ func Shred(chunkSize int, data []byte) [][]byte {
 	return chunks
 }
 
-func Unshred(chunks [][]byte) []byte {
-	return nil
+func Unshred(data utils.Data) []byte {
+	chunks := data.DataChunks
+	unshreaded := []byte{}
+	for _, chunk := range chunks {
+		unshreaded = append(unshreaded, chunk...)
+	}
+	return unshreaded
 }
