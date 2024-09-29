@@ -17,12 +17,13 @@ func init() {
 }
 
 func main() {
-	const CHUNK_SIZE = 3000
+	const CHUNK_SIZE = 3000 // TODO : make this configurable
 	log.Info(utils.GetLogo())
 	log.Info("Starting Ares . . . ")
 	log.Info("Ares is running in ", "mode", log.GetLevel())
 	log.Info("Setting chunk size", "chunkSize", CHUNK_SIZE)
 	data, err := utils.GetData()
+	data.ChunkSize = CHUNK_SIZE
 	if err != nil {
 		log.Error("Something went wrong fetching the data", "Error", err)
 	}
@@ -36,9 +37,12 @@ func main() {
 	log.Debug("raw size of compressed data", "size", len(data.CompressedData))
 	log.Info("Size of compressed data", "size", utils.HumanFilesize(len(data.CompressedData)))
 	log.Info("SHA256 of compressed data", "compressedDataHash", data.CompressedDataSHA256)
+	//TODO : log compression ratio
+	// TODO : refactor util functions to take in a pointer to the data struct and pass that around
 
 	log.Info("Chunking the data into chunks of", "size", CHUNK_SIZE)
-	chunks := shredder.Shred(CHUNK_SIZE, data.CompressedData)
+	data.DataChunks = shredder.Shred(data)
+	chunks := data.DataChunks
 	log.Info("Data split up into chunks", "numberOfChunks", len(chunks))
 
 	if log.GetLevel() == log.DebugLevel {
