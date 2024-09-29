@@ -16,6 +16,7 @@ func init() {
 	log.SetFormatter(log.TextFormatter) // TODO : make configurable
 }
 
+// TODO : refactor util functions to take in a pointer to the data struct and pass that around
 func main() {
 	const CHUNK_SIZE = 3000 // TODO : make this configurable
 	log.Info(utils.GetLogo())
@@ -37,9 +38,8 @@ func main() {
 	log.Debug("raw size of compressed data", "size", len(data.CompressedData))
 	log.Info("Size of compressed data", "size", utils.HumanFilesize(len(data.CompressedData)))
 	log.Info("SHA256 of compressed data", "compressedDataHash", data.CompressedDataSHA256)
-	//TODO : log compression ratio
-	// TODO : refactor util functions to take in a pointer to the data struct and pass that around
-
+	data.CompressionRatio = (float64(len(data.CompressedData)) / float64(len(data.Data))) * 100
+	log.Info("Data size decreased by", "compressionRatio", data.CompressionRatio)
 	log.Info("Chunking the data into chunks of", "size", CHUNK_SIZE)
 	data.DataChunks = shredder.Shred(data)
 	chunks := data.DataChunks

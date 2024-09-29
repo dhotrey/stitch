@@ -15,7 +15,7 @@ type Data struct {
 	FileName             string
 	InitialSize          string
 	CompressedSize       string
-	CompressionRatio     int
+	CompressionRatio     float64
 	OrignalDataSHA256    string
 	CompressedDataSHA256 string
 	ChunkSize            int
