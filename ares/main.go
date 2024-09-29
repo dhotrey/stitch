@@ -54,4 +54,11 @@ func main() {
 		log.Debug("verifying", "verificationSuccessful", formulaCalculation == len(data.CompressedData))
 	}
 
+	log.Info("Hashing individual chunks")
+	data.ChunkHashes = make(map[int]string)
+	for idx, chunk := range data.DataChunks {
+		chunkHash := utils.GetSHA256(chunk)
+		log.Debug("", "chunk", idx, "chunkHash", chunkHash)
+		data.ChunkHashes[idx] = chunkHash
+	}
 }
