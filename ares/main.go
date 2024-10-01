@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/log"
 	"github.com/theredditbandit/stitch/ares/pkg/shredder"
 	"github.com/theredditbandit/stitch/ares/pkg/squish"
@@ -55,10 +57,11 @@ func main() {
 	}
 
 	log.Info("Hashing individual chunks")
-	data.ChunkHashes = make(map[int]string)
+	data.ChunkHashes = make(map[string]string)
 	for idx, chunk := range data.DataChunks {
 		chunkHash := utils.GetSHA256(chunk)
-		log.Debug("", "chunk", idx, "chunkHash", chunkHash)
-		data.ChunkHashes[idx] = chunkHash
+		chunkName := fmt.Sprintf("%s-chunk-%d", data.FileName, idx)
+		log.Debug("", "chunk", chunkName, "chunkHash", chunkHash)
+		data.ChunkHashes[chunkName] = chunkHash
 	}
 }

@@ -20,7 +20,7 @@ type Data struct {
 	CompressedDataSHA256 string
 	ChunkSize            int
 	DataChunks           [][]byte
-	ChunkHashes          map[int]string
+	ChunkHashes          map[string]string
 }
 
 func getBeeMovieScript() ([]byte, error) {
