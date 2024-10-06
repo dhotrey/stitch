@@ -1,12 +1,14 @@
 package utils
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"math"
 	"os"
 
 	"github.com/charmbracelet/log"
+	"github.com/redis/go-redis/v9"
 )
 
 type Data struct {
@@ -19,8 +21,41 @@ type Data struct {
 	OrignalDataSHA256    string
 	CompressedDataSHA256 string
 	ChunkSize            int
-	DataChunks           [][]byte
+	DataChunks           [][]byte // this should be written to pubsub/list/queue/stream
 	ChunkHashes          map[string]string
+	TotalChunks          int
+}
+
+func (d *Data) WriteToRedis(rdb *redis.Client) {
+	log.Info("Writing to redis")
+	ctx := context.Background()
+	id := d.FileName
+
+	set := func(key string, val any) {
+		log.Debug("redis-set", "key", key, "value", val)
+		res, err := rdb.Set(ctx, key, val, 0).Result()
+		if err != nil {
+			log.Error("redis-set", "err", err, "result", res)
+		} else {
+			log.Debug("redis-set", "result", res)
+		}
+	}
+
+	key := func(k string) string { return fmt.Sprintf("%s-%s", id, k) }
+
+	set("FileName", d.FileName)
+	set(key("InitialSize"), d.InitialSize)
+	set(key("CompressedSize"), d.CompressedSize)
+	set(key("CompressionRatio"), d.CompressionRatio)
+	set(key("PreCompressionSHA"), d.OrignalDataSHA256)
+	set(key("PostCompressionSHA"), d.CompressedDataSHA256)
+	set(key("ChunkSize"), d.ChunkSize)
+	set(key("TotalChunks"), d.TotalChunks)
+
+	for k, v := range d.ChunkHashes {
+		set(key(fmt.Sprintf("%s-hash", k)), v)
+	}
+
 }
 
 func getBeeMovieScript() ([]byte, error) {
@@ -84,4 +119,21 @@ func GetSHA256(data []byte) string {
 	h := sha256.New()
 	h.Write(data)
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func ConnectToRedis(done chan bool, rdbChan chan *redis.Client) {
+	log.Info("Connecting to redis")
+	var ctx = context.Background()
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	pong, err := rdb.Ping(ctx).Result()
+	if err != nil {
+		log.Warn("error connecting to redis instance", "err", err)
+		done <- false
+	} else {
+		log.Info("Successfully connected to redis", "PING", pong)
+		done <- true
+		rdbChan <- rdb
+	}
 }

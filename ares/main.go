@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/log"
+	"github.com/redis/go-redis/v9"
 	"github.com/theredditbandit/stitch/ares/pkg/shredder"
 	"github.com/theredditbandit/stitch/ares/pkg/squish"
 	"github.com/theredditbandit/stitch/ares/utils"
@@ -16,10 +17,14 @@ func init() {
 	log.SetPrefix("Ares")
 	log.SetLevel(log.DebugLevel)        // TODO : make configurable
 	log.SetFormatter(log.TextFormatter) // TODO : make configurable
+
 }
 
 // TODO : refactor util functions to take in a pointer to the data struct and pass that around
 func main() {
+	done := make(chan bool)
+	rdbChan := make(chan *redis.Client)
+	go utils.ConnectToRedis(done, rdbChan)
 	const CHUNK_SIZE = 3000 // TODO : make this configurable
 	log.Info(utils.GetLogo())
 	log.Info("Starting Ares . . . ")
@@ -45,7 +50,8 @@ func main() {
 	log.Info("Chunking the data into chunks of", "size", CHUNK_SIZE)
 	data.DataChunks = shredder.Shred(data)
 	chunks := data.DataChunks
-	log.Info("Data split up into chunks", "numberOfChunks", len(chunks))
+	data.TotalChunks = len(chunks)
+	log.Info("Data split up into chunks", "numberOfChunks", data.TotalChunks)
 
 	if log.GetLevel() == log.DebugLevel {
 		log.Debug("verifying chunking . . .")
@@ -63,5 +69,16 @@ func main() {
 		chunkName := fmt.Sprintf("%s-chunk-%d", data.FileName, idx)
 		log.Debug("", "chunk", chunkName, "chunkHash", chunkHash)
 		data.ChunkHashes[chunkName] = chunkHash
+	}
+	connected := <-done
+	log.Debug("connection status", "connected", connected)
+	if connected {
+		log.Info("Connected to redis successfully")
+		client := <-rdbChan
+		data.WriteToRedis(client)
+		log.Info("Successfully written data to redis")
+	} else {
+		log.Warn("could not connect to redis")
+		log.Error("Cannot write data to redis instance")
 	}
 }
