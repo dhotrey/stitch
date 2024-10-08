@@ -1,10 +1,11 @@
 package utils
 
 import (
+	"context"
 	"errors"
+	"github.com/redis/go-redis/v9"
 	"os"
 	"strings"
-
 )
 
 func IsFileExists(path string) (bool, error) {
@@ -27,4 +28,17 @@ func IsFileSupported(path string) (bool, error) {
 		return false, errors.New("File type not supported")
 	}
 	return support, nil
+}
+
+func ConnectToRedis(ctx context.Context, cancel context.CancelFunc, rdbChan chan *redis.Client) {
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	_, err := rdb.Ping(ctx).Result()
+	if err != nil {
+		rdbChan <- nil
+	} else {
+		rdbChan <- rdb
+		cancel()
+	}
 }
