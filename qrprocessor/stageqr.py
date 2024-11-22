@@ -20,7 +20,7 @@ from PIL import Image
 import qrcode
 import itertools
 
-import copy
+from copy import deepcopy
 
 import argparse
 import logging
@@ -256,7 +256,7 @@ def main(BaseQRData: str = "BaseQRCode"):
 
     ViableBlockAltCoordLst = DeriveBlockAdjustmentCoord(QRMatrix, LenofQRMatrix)
 
-    worker.main(QRMatrix,LenofQRMatrix,ViableBlockAltCoordLst,0,100)
+    worker.main(deepcopy(QRMatrix),LenofQRMatrix,ViableBlockAltCoordLst,0,100)
 
 
 if __name__ == "__main__":
