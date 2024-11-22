@@ -16,12 +16,12 @@ Coordinate based system
   |
   V
 """
-
+from PIL import Image
 import logging
 import argparse
 import qrcode
 import itertools
-from qrcode.image.pil import PilImage
+
 
 
 # Code to visualize the QR Code in Nested List format
@@ -262,6 +262,41 @@ def AlterModuleColour(
         logger.info(f"Changing Colour of {xCoordinate},{yCoordinate} to {value}")
     QRMatrix[yCoordinate][xCoordinate][0] = value
 
+def makeimage(QRMatrix : list, LenofQRMatrix : int):
+
+    QRMatrix[11][0][1] = 1
+
+    blocksize = 100
+    colour_black = (0,0,0)
+    colour_white = (255, 255, 255)
+
+    img = Image.new('RGB', (LenofQRMatrix*blocksize, LenofQRMatrix*blocksize), color='white')
+    pixels = img.load()
+
+    
+    def setblock(block_y : int,block_x : int,blocksize : int,colour : tuple): # Sets a block of pixels specified by the blocksize variable
+        for y in range(block_y*blocksize,block_y*blocksize+blocksize):
+            for x in range(block_x*blocksize,block_x*blocksize+blocksize):
+                pixels[x, y] = colour
+
+    def setblockrect(block_y : int,block_x : int,blocksizeY : int, blocksizeX : int,colour : tuple):
+        for y in range(block_y*blocksize,(block_y*blocksize)+blocksizeY):
+            for x in range(block_x*blocksize,(block_x*blocksize)+blocksizeX):
+                pixels[x, y] = colour
+
+    for y in range(0,LenofQRMatrix):
+        for x in range(0,LenofQRMatrix):
+            if QRMatrix[y][x][0] == 1:  # Black pixel
+                if QRMatrix[y][x][1] == 1: # If pixel is viable for data embed
+                    setblockrect(y,x,blocksize,blocksize,colour_black)
+                    print("Helooo")
+                # else:
+                #     setblock(y,x,blocksize,colour_black)
+                    
+            if QRMatrix[y][x][0] == 0: # White pixel
+                setblock(y,x,blocksize,colour_white)
+
+    img.save('output.png')
 
 # MAIN FUNCTION
 def main(BaseQRData: str = "BaseQRCode"):
@@ -271,10 +306,6 @@ def main(BaseQRData: str = "BaseQRCode"):
     QRVersion, QRMatrix, qr = DefineQRMatrix(
         BaseQRData
     )  # Got data from Arg. If no data available then it defaults to BaseQRCode
-    qr.modules = QRMatrix
-    qr.make_image(fill_color="black", back_color="white", image_factory=PilImage).save(
-        "custom_qr_code.png"
-    )
 
     # Define Misc Vars
     LenofQRMatrix = DefineVariables(QRMatrix)
@@ -283,7 +314,8 @@ def main(BaseQRData: str = "BaseQRCode"):
     MaskingMainFunction(QRMatrix, QRVersion, LenofQRMatrix)
 
     ViableBlockAltCoordLst = DeriveBlockAdjustmentCoord(QRMatrix, LenofQRMatrix)
-    _ = ViableBlockAltCoordLst  # TODO : Pass to redis later
+
+    makeimage(QRMatrix,LenofQRMatrix)
 
 
 if __name__ == "__main__":
