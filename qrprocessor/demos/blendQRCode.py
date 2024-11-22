@@ -1,6 +1,8 @@
 import qrcode
 from PIL import Image
 import numpy as np
+# yellow - purple
+# blue - red
 
 
 def create_colored_qr(data, fill_color="purple", background_color="yellow", size=10):
@@ -11,7 +13,7 @@ def create_colored_qr(data, fill_color="purple", background_color="yellow", size
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
         box_size=size,
-        border=4,
+        border=0,
     )
 
     qr.add_data(data)
