@@ -17,12 +17,15 @@ Coordinate based system
   V
 """
 from PIL import Image
-import logging
-import argparse
 import qrcode
 import itertools
 
+import copy
 
+import argparse
+import logging
+
+import worker
 
 # Code to visualize the QR Code in Nested List format
 def printtesting(QRMatrix: list) -> None:
@@ -40,9 +43,7 @@ def setup_logging(level):
 
 
 # Alter Module's State of Given Co-ordinate to a given value
-def AlterModuleState(
-    xCoordinate: int, yCoordinate: int, value: int, QRMatrix: list
-) -> None:
+def AlterModuleState(xCoordinate: int, yCoordinate: int, value: int, QRMatrix: list) -> None:
     # print("Printing x,y,val",xCoordinate,yCoordinate,value)
     QRMatrix[yCoordinate][xCoordinate][1] = value
 
@@ -52,12 +53,8 @@ def MaskLoopTP(y: tuple, QRMatrix: list, LenofQRMatrix: int) -> None:
     # Condition to check if list value is 6,6
     # This condition only applies to the TOP LEFT Tracking Pattern
     if y[0] == y[1]:
-        for i in range(
-            0, 7
-        ):  # 7 Value hardcoded because size of each Tracking Pattern is 7 by 7
-            for j in range(
-                0, 7
-            ):  # Range goes till 7 because range goes till the value-1
+        for i in range(0, 7):  # 7 Value hardcoded because size of each Tracking Pattern is 7 by 7
+            for j in range(0, 7):  # Range goes till 7 because range goes till the value-1
                 AlterModuleState(i, j, -1, QRMatrix)
 
     # Condition to check if list value is MAX,6
@@ -79,12 +76,8 @@ def MaskLoopTP(y: tuple, QRMatrix: list, LenofQRMatrix: int) -> None:
 
 # Iterator Function to Mask the Alignment Pattern
 def MaskLoopAP(y: tuple, QRMatrix: list) -> None:
-    for i in range(
-        y[0] - 2, y[0] + 3
-    ):  # We need to subtract it by 2 to correct the pos of given coords and add 3 for the same
-        for j in range(
-            y[1] - 2, y[1] + 3
-        ):  # We need to subtract it by 2 to correct the pos of given coords and add 3 for the same
+    for i in range(y[0] - 2, y[0] + 3):  # We need to subtract it by 2 to correct the pos of given coords and add 3 for the same
+        for j in range(y[1] - 2, y[1] + 3):  # We need to subtract it by 2 to correct the pos of given coords and add 3 for the same
             AlterModuleState(i, j, -1, QRMatrix)
 
 
@@ -162,6 +155,7 @@ def MaskingMainFunction(QRMatrix: list, QRVersion: int, LenofQRMatrix: int) -> N
     if args.log:
         logger.info(f"Co-ordinate of Tracking/Alignment Pattern {TPList}")
         logger.info(f"QR Version {QRVersion}, Masking Tracking Pattern")
+
     # A for loop to send each value of list to the Mask iterator
     for x in TPList:
         MaskLoopTP(x, QRMatrix, LenofQRMatrix)
@@ -185,7 +179,7 @@ def MaskingMainFunction(QRMatrix: list, QRVersion: int, LenofQRMatrix: int) -> N
 
 
 # Func to define QR MATRIX 2D array
-def DefineQRMatrix(BaseQRData: str = "BaseQRCode") -> int and list and qrcode.QRCode:
+def DefineQRMatrix(BaseQRData: str = "BaseQRCode") -> int | list:
     if args.log:
         timerstart = time.time()
 
@@ -211,7 +205,7 @@ def DefineQRMatrix(BaseQRData: str = "BaseQRCode") -> int and list and qrcode.QR
         logger.warning(f"Generated Base QR Code in {timerend-timerstart} second")
         printtesting(QRMatrix)
 
-    return QRVersion, QRMatrix, qr
+    return QRVersion, QRMatrix
 
 
 # Func to define basic variables
@@ -245,65 +239,12 @@ def DeriveBlockAdjustmentCoord(QRMatrix: list, LenofQRMatrix: int) -> list:
         print("Co-ordinate Formatting - (y,x)\n", ViableBlockAlternationCoordLst)
     return ViableBlockAlternationCoordLst
 
-
-# Returns Colour of Module Pair
-def RowMPColour(xCoordinate: int, yCoordinate: int, QRMatrix: list) -> list:
-    return [
-        QRMatrix[yCoordinate][xCoordinate][0],
-        QRMatrix[yCoordinate][xCoordinate + 1][0],
-    ]
-
-
-# Alter Module's State of Given Co-ordinate to a given value
-def AlterModuleColour(
-    xCoordinate: int, yCoordinate: int, value: int, QRMatrix: list
-) -> None:
-    if args.log:
-        logger.info(f"Changing Colour of {xCoordinate},{yCoordinate} to {value}")
-    QRMatrix[yCoordinate][xCoordinate][0] = value
-
-def makeimage(QRMatrix : list, LenofQRMatrix : int):
-
-    QRMatrix[11][0][1] = 1
-
-    blocksize = 100
-    colour_black = (0,0,0)
-    colour_white = (255, 255, 255)
-
-    img = Image.new('RGB', (LenofQRMatrix*blocksize, LenofQRMatrix*blocksize), color='white')
-    pixels = img.load()
-
-    
-    def setblock(block_y : int,block_x : int,blocksize : int,colour : tuple): # Sets a block of pixels specified by the blocksize variable
-        for y in range(block_y*blocksize,block_y*blocksize+blocksize):
-            for x in range(block_x*blocksize,block_x*blocksize+blocksize):
-                pixels[x, y] = colour
-
-    def setblockrect(block_y : int,block_x : int,blocksizeY : int, blocksizeX : int,colour : tuple):
-        for y in range(block_y*blocksize,(block_y*blocksize)+blocksizeY):
-            for x in range(block_x*blocksize,(block_x*blocksize)+blocksizeX):
-                pixels[x, y] = colour
-
-    for y in range(0,LenofQRMatrix):
-        for x in range(0,LenofQRMatrix):
-            if QRMatrix[y][x][0] == 1:  # Black pixel
-                if QRMatrix[y][x][1] == 1: # If pixel is viable for data embed
-                    setblockrect(y,x,blocksize,blocksize,colour_black)
-                    print("Helooo")
-                # else:
-                #     setblock(y,x,blocksize,colour_black)
-                    
-            if QRMatrix[y][x][0] == 0: # White pixel
-                setblock(y,x,blocksize,colour_white)
-
-    img.save('output.png')
-
 # MAIN FUNCTION
 def main(BaseQRData: str = "BaseQRCode"):
     if args.log:
         logger.info("Started Main Function")
     # Make Base QR Code and assign to a variable
-    QRVersion, QRMatrix, qr = DefineQRMatrix(
+    QRVersion, QRMatrix = DefineQRMatrix(
         BaseQRData
     )  # Got data from Arg. If no data available then it defaults to BaseQRCode
 
@@ -315,7 +256,7 @@ def main(BaseQRData: str = "BaseQRCode"):
 
     ViableBlockAltCoordLst = DeriveBlockAdjustmentCoord(QRMatrix, LenofQRMatrix)
 
-    makeimage(QRMatrix,LenofQRMatrix)
+    worker.main(QRMatrix,LenofQRMatrix,ViableBlockAltCoordLst,0,100)
 
 
 if __name__ == "__main__":
