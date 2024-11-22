@@ -21,6 +21,7 @@ import logging
 import argparse
 import qrcode
 import itertools
+from qrcode.image.pil import PilImage
 
 
 # Code to visualize the QR Code in Nested List format
@@ -184,7 +185,7 @@ def MaskingMainFunction(QRMatrix: list, QRVersion: int, LenofQRMatrix: int) -> N
 
 
 # Func to define QR MATRIX 2D array
-def DefineQRMatrix(BaseQRData: str = "BaseQRCode") -> int | list:
+def DefineQRMatrix(BaseQRData: str = "BaseQRCode") -> int and list and qrcode.QRCode:
     if args.log:
         timerstart = time.time()
 
@@ -210,7 +211,7 @@ def DefineQRMatrix(BaseQRData: str = "BaseQRCode") -> int | list:
         logger.warning(f"Generated Base QR Code in {timerend-timerstart} second")
         printtesting(QRMatrix)
 
-    return QRVersion, QRMatrix
+    return QRVersion, QRMatrix, qr
 
 
 # Func to define basic variables
@@ -267,9 +268,13 @@ def main(BaseQRData: str = "BaseQRCode"):
     if args.log:
         logger.info("Started Main Function")
     # Make Base QR Code and assign to a variable
-    QRVersion, QRMatrix = DefineQRMatrix(
+    QRVersion, QRMatrix, qr = DefineQRMatrix(
         BaseQRData
     )  # Got data from Arg. If no data available then it defaults to BaseQRCode
+    qr.modules = QRMatrix
+    qr.make_image(fill_color="black", back_color="white", image_factory=PilImage).save(
+        "custom_qr_code.png"
+    )
 
     # Define Misc Vars
     LenofQRMatrix = DefineVariables(QRMatrix)

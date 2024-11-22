@@ -8,6 +8,7 @@ dependencies = [
     "qrcode>=8.0",
     "pandas>=2.2.3",
     "logging>=0.4.9.6",
+    "pillow>=11.0.0",
 ]
 
 [build-system]
