@@ -1,0 +1,16 @@
+[project]
+name = "qrprocessor"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "qrcode>=8.0",
+    "pandas>=2.2.3",
+    "logging>=0.4.9.6",
+    "pillow>=11.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
