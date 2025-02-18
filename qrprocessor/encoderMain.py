@@ -16,7 +16,6 @@ Coordinate based system
   |
   V
 """
-from PIL import Image
 import qrcode
 import itertools
 
@@ -25,7 +24,11 @@ from copy import deepcopy
 import argparse
 import logging
 
-import worker
+import os
+from datetime import datetime
+
+import encoderWorker
+
 
 # Code to visualize the QR Code in Nested List format
 def printtesting(QRMatrix: list) -> None:
@@ -183,7 +186,7 @@ def DefineQRMatrix(BaseQRData: str = "BaseQRCode") -> int | list:
     if args.log:
         timerstart = time.time()
 
-    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_L, border=0)
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_L, border=0,version=2)
 
     qr.add_data(BaseQRData)
     QRVersion = qr.version
@@ -239,8 +242,17 @@ def DeriveBlockAdjustmentCoord(QRMatrix: list, LenofQRMatrix: int) -> list:
         print("Co-ordinate Formatting - (y,x)\n", ViableBlockAlternationCoordLst)
     return ViableBlockAlternationCoordLst
 
+def create_unique_folder():
+    """
+    Creates a unique folder for storing generated QR codes.
+    """
+    # Generate a unique folder name using a timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return f"qr_codes_{timestamp}"
+
+
 # MAIN FUNCTION
-def main(BaseQRData: str = "BaseQRCode"):
+def main(BaseQRData: str = "BaseQRCode", SecretData: str = "SecretData"):
     if args.log:
         logger.info("Started Main Function")
     # Make Base QR Code and assign to a variable
@@ -255,8 +267,24 @@ def main(BaseQRData: str = "BaseQRCode"):
     MaskingMainFunction(QRMatrix, QRVersion, LenofQRMatrix)
 
     ViableBlockAltCoordLst = DeriveBlockAdjustmentCoord(QRMatrix, LenofQRMatrix)
+    
+    Len_SecretData = len(SecretData)
+    Len_MaxBitsPerQR = len(ViableBlockAltCoordLst)
+    iteration = 0
+    UniqueFolder = create_unique_folder()
+    
+    os.makedirs("Output",exist_ok=True)
 
-    worker.main(deepcopy(QRMatrix),LenofQRMatrix,ViableBlockAltCoordLst,0,100)
+    os.makedirs(f"Output/{UniqueFolder}",exist_ok=True)
+
+    while SecretData:
+        chunk = SecretData[:Len_MaxBitsPerQR]
+        SecretData = SecretData[Len_MaxBitsPerQR:]
+
+        encoderWorker.main(deepcopy(QRMatrix),LenofQRMatrix,ViableBlockAltCoordLst,UniqueFolder,iteration,100,chunk)
+
+        iteration += 1
+    # encoderWorker.main(deepcopy(QRMatrix),LenofQRMatrix,ViableBlockAltCoordLst,0,100)
 
 
 if __name__ == "__main__":
@@ -283,6 +311,13 @@ if __name__ == "__main__":
         help="Input data for generating the base QR Code",
     )
 
+    parser.add_argument(
+        "--SecretData",
+        type=str,
+        default="SecretData",
+        help="Input Secret Data for embedding in QR Code"
+    )
+
     # Parse the command-line arguments
     args = parser.parse_args()
 
@@ -298,4 +333,4 @@ if __name__ == "__main__":
         import time
 
     # Run the main function
-    main(args.BaseQRData)
+    main(args.BaseQRData,args.SecretData)
