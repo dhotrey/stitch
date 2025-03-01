@@ -204,3 +204,7 @@ go.work
 styx/data/*
 
 *.png
+
+tests
+Output
+demos
