@@ -208,3 +208,4 @@ styx/data/*
 tests
 Output
 demos
+*.rdb
