@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"math"
 	"os"
@@ -53,9 +54,22 @@ func (d *Data) WriteToRedis(rdb *redis.Client) {
 	set(key("TotalChunks"), d.TotalChunks)
 
 	for k, v := range d.ChunkHashes {
-		set(key(fmt.Sprintf("%s-hash", k)), v)
+		set(k, v)
+		err := rdb.RPush(ctx, "chunkHashes", v).Err()
+		if err != nil {
+			log.Fatal("could not write chunk hashes to redis", err)
+		}
+
 	}
 
+	for _, data := range d.DataChunks {
+		b64Data := base64.StdEncoding.EncodeToString(data)
+		err := rdb.RPush(ctx, "chunkdata", b64Data).Err()
+		if err != nil {
+			log.Fatal("Could not write data to redis", err)
+		}
+	}
+	log.Infof("Written %d chunks to redis", len(d.ChunkHashes))
 }
 
 func getBeeMovieScript() ([]byte, error) {

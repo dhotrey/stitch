@@ -66,7 +66,7 @@ func main() {
 	data.ChunkHashes = make(map[string]string)
 	for idx, chunk := range data.DataChunks {
 		chunkHash := utils.GetSHA256(chunk)
-		chunkName := fmt.Sprintf("%s-chunk-%d", data.FileName, idx)
+		chunkName := fmt.Sprintf("%s-%d", data.FileName, idx)
 		log.Debug("", "chunk", chunkName, "chunkHash", chunkHash)
 		data.ChunkHashes[chunkName] = chunkHash
 	}
