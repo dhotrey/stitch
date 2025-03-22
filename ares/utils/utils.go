@@ -72,13 +72,14 @@ func (d *Data) WriteToRedis(rdb *redis.Client) {
 	log.Infof("Written %d chunks to redis", len(d.ChunkHashes))
 }
 
-func getBeeMovieScript() ([]byte, error) {
+func getPayload() ([]byte, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
 	log.Debug("Current working directory", "cwd", cwd)
-	dat, err := os.ReadFile("tests/bee-movie-script.txt")
+	dat, err := os.ReadFile("tests/payload.txt")
+	// dat, err := os.ReadFile("tests/bee-movie-script.txt")
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +90,7 @@ func getBeeMovieScript() ([]byte, error) {
 func GetData() (Data, error) {
 	d := Data{}
 	var err error
-	d.Data, err = getBeeMovieScript() // TODO : change this to actual data source later
+	d.Data, err = getPayload() // TODO : change this to actual data source later
 	if err != nil {
 		return d, err
 	}

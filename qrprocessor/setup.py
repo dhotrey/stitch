@@ -16,37 +16,31 @@ Coordinate based system
   |
   V
 """
+
 import qrcode
 import itertools
 
-from copy import deepcopy
 
+import pandas as pd
 import argparse
-import logging
 
 import os
 from datetime import datetime
+import time
 
 # import utils.ImageEncoder as ImageEncoder
 
 
 # Code to visualize the QR Code in Nested List format
 def printtesting(QRMatrix: list) -> None:
-    if logger.isEnabledFor(logging.INFO):
-        # Only evaluate printtesting if logging is enabled
-        df = pd.DataFrame(QRMatrix)
-        logger.info(f"Base QR Code Visualized\n{df}")
-
-
-# Logging Setup
-def setup_logging(level):
-    # Setup logging to print to the console
-    logging.basicConfig(level=level, format="%(asctime)s - %(levelname)s - %(message)s")
-    logger.setLevel(level)
+    df = pd.DataFrame(QRMatrix)
+    print(f"Base QR Code Visualized\n{df}")
 
 
 # Alter Module's State of Given Co-ordinate to a given value
-def AlterModuleState(xCoordinate: int, yCoordinate: int, value: int, QRMatrix: list) -> None:
+def AlterModuleState(
+    xCoordinate: int, yCoordinate: int, value: int, QRMatrix: list
+) -> None:
     QRMatrix[yCoordinate][xCoordinate][1] = value
 
 
@@ -55,8 +49,12 @@ def MaskLoopTP(y: tuple, QRMatrix: list, LenofQRMatrix: int) -> None:
     # Condition to check if list value is 6,6
     # This condition only applies to the TOP LEFT Tracking Pattern
     if y[0] == y[1]:
-        for i in range(0, 7):  # 7 Value hardcoded because size of each Tracking Pattern is 7 by 7
-            for j in range(0, 7):  # Range goes till 7 because range goes till the value-1
+        for i in range(
+            0, 7
+        ):  # 7 Value hardcoded because size of each Tracking Pattern is 7 by 7
+            for j in range(
+                0, 7
+            ):  # Range goes till 7 because range goes till the value-1
                 AlterModuleState(i, j, -1, QRMatrix)
 
     # Condition to check if list value is MAX,6
@@ -78,24 +76,25 @@ def MaskLoopTP(y: tuple, QRMatrix: list, LenofQRMatrix: int) -> None:
 
 # Iterator Function to Mask the Alignment Pattern
 def MaskLoopAP(y: tuple, QRMatrix: list) -> None:
-    for i in range(y[0] - 2, y[0] + 3):  # We need to subtract it by 2 to correct the pos of given coords and add 3 for the same
-        for j in range(y[1] - 2, y[1] + 3):  # We need to subtract it by 2 to correct the pos of given coords and add 3 for the same
+    for i in range(
+        y[0] - 2, y[0] + 3
+    ):  # We need to subtract it by 2 to correct the pos of given coords and add 3 for the same
+        for j in range(
+            y[1] - 2, y[1] + 3
+        ):  # We need to subtract it by 2 to correct the pos of given coords and add 3 for the same
             AlterModuleState(i, j, -1, QRMatrix)
 
 
 # Tracking Pattern and Alignment Patterns that are generated on bigger versions of qr code from Version 2 and Up
 def MaskingMainFunction(QRMatrix: list, QRVersion: int, LenofQRMatrix: int) -> None:
     if QRVersion < 1 or QRVersion > 40:
-        if args.log:
-            logger.warning(f"QR Version {QRVersion} not within range")
+        print(f"QR Version {QRVersion} not within range")
         return
     if QRVersion == 1:
-        if args.log:
-            logger.info(f"QR Version {QRVersion}, masking Tracking Pattern only")
+        print(f"QR Version {QRVersion}, masking Tracking Pattern only")
         TPList = [(6, 6), (6, 14), (14, 6)]
         for x in TPList:
             MaskLoopTP(x, QRMatrix, LenofQRMatrix)
-        if args.log:
             printtesting(QRMatrix)
         return
 
@@ -154,9 +153,8 @@ def MaskingMainFunction(QRMatrix: list, QRVersion: int, LenofQRMatrix: int) -> N
     MaxMaskPatternVal = max(MaskCoords)
     TPList = [(6, 6), (6, MaxMaskPatternVal), (MaxMaskPatternVal, 6)]
 
-    if args.log:
-        logger.info(f"Co-ordinate of Tracking/Alignment Pattern {TPList}")
-        logger.info(f"QR Version {QRVersion}, Masking Tracking Pattern")
+    print(f"Co-ordinate of Tracking/Alignment Pattern {TPList}")
+    print(f"QR Version {QRVersion}, Masking Tracking Pattern")
 
     # A for loop to send each value of list to the Mask iterator
     for x in TPList:
@@ -166,8 +164,7 @@ def MaskingMainFunction(QRMatrix: list, QRVersion: int, LenofQRMatrix: int) -> N
 
     ### START CODE FOR MASKING ALIGNMENT PATTERN ###
 
-    if args.log:
-        logger.info(f"QR Version {QRVersion}, Masking Alignment Pattern")
+    print(f"QR Version {QRVersion}, Masking Alignment Pattern")
     # Eliminated Co-ordinates List after Masking out Large Tracking Pattern
     # It leaves us with list of Alignment Pattern
     APList = [item for item in CartProductList if item not in TPList]
@@ -176,23 +173,22 @@ def MaskingMainFunction(QRMatrix: list, QRVersion: int, LenofQRMatrix: int) -> N
         MaskLoopAP(x, QRMatrix)
     ### END CODE FOR MASKING ALIGNMENT PATTERN ###
 
-    if args.log:
-        printtesting(QRMatrix)
+    printtesting(QRMatrix)
 
 
 # Func to define QR MATRIX 2D array
 def DefineQRMatrix(BaseQRData: str = "BaseQRCode") -> int | list:
-    if args.log:
-        timerstart = time.time()
+    timerstart = time.time()
 
-    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_L, border=0,version=2)
+    qr = qrcode.QRCode(
+        error_correction=qrcode.constants.ERROR_CORRECT_L, border=0, version=2
+    )
 
     qr.add_data(BaseQRData)
     QRVersion = qr.version
 
-    if args.log:
-        logger.info(f'Generating Base QR from "{BaseQRData}" Data')
-        logger.info(f"Base QR Version -> {QRVersion}")
+    print(f'Generating Base QR from "{BaseQRData}" Data')
+    print(f"Base QR Version -> {QRVersion}")
 
     qr.make(fit=True)
 
@@ -202,10 +198,9 @@ def DefineQRMatrix(BaseQRData: str = "BaseQRCode") -> int | list:
         [[1, 0] if x else [0, 0] for x in sublist] for sublist in qr.get_matrix()
     ]
 
-    if args.log:
-        timerend = time.time()
-        logger.warning(f"Generated Base QR Code in {timerend-timerstart} second")
-        printtesting(QRMatrix)
+    timerend = time.time()
+    print(f"Generated Base QR Code in {timerend-timerstart} second")
+    printtesting(QRMatrix)
 
     return QRVersion, QRMatrix
 
@@ -216,16 +211,14 @@ def DefineVariables(QRMatrix: list) -> int | int:
     # Calulating Length of X and Y Axis Once
     LenofQRMatrix = len(QRMatrix)
 
-    if args.log:
-        logger.info(f"Length of X & Y axis {LenofQRMatrix}")
+    print(f"Length of X & Y axis {LenofQRMatrix}")
 
     return LenofQRMatrix
 
 
 # Func to derive location of viable spots to embed bits
 def DeriveBlockAdjustmentCoord(QRMatrix: list, LenofQRMatrix: int) -> list:
-    if args.log:
-        logger.info("Deriving Possible Co-ordinates ")
+    print("Deriving Possible Co-ordinates ")
 
     ViableBlockAlternationCoordLst = []
     for xCoordinate in range(LenofQRMatrix - 1):
@@ -236,10 +229,10 @@ def DeriveBlockAdjustmentCoord(QRMatrix: list, LenofQRMatrix: int) -> list:
             ):
                 ViableBlockAlternationCoordLst.append((yCoordinate, xCoordinate))
 
-    if args.log:
-        logger.info("Successfully Generated Viable Co-ordinates for Bit Embedding")
+        print("Successfully Generated Viable Co-ordinates for Bit Embedding")
         print("Co-ordinate Formatting - (y,x)\n", ViableBlockAlternationCoordLst)
     return ViableBlockAlternationCoordLst
+
 
 def create_unique_folder():
     """
@@ -252,8 +245,7 @@ def create_unique_folder():
 
 # MAIN FUNCTION
 def main(BaseQRData: str = "BaseQRCode"):
-    if args.log:
-        logger.info("Started Main Function")
+    print("Started Main Function")
     # Make Base QR Code and assign to a variable
     QRVersion, QRMatrix = DefineQRMatrix(
         BaseQRData
@@ -266,14 +258,14 @@ def main(BaseQRData: str = "BaseQRCode"):
     MaskingMainFunction(QRMatrix, QRVersion, LenofQRMatrix)
 
     ViableBlockAltCoordLst = DeriveBlockAdjustmentCoord(QRMatrix, LenofQRMatrix)
-    
+
     Len_MaxBitsPerQR = len(ViableBlockAltCoordLst)
     UniqueFolder = create_unique_folder()
-    
-    os.makedirs("Output",exist_ok=True)
 
-    os.makedirs(f"Output/{UniqueFolder}",exist_ok=True)
-    
+    os.makedirs("Output", exist_ok=True)
+
+    os.makedirs(f"Output/{UniqueFolder}", exist_ok=True)
+
     return QRMatrix, LenofQRMatrix, ViableBlockAltCoordLst, UniqueFolder
 
     # # Chunking code, Comment out later
@@ -319,18 +311,7 @@ if __name__ == "__main__":
     # )
 
     # Parse the command-line arguments
-    args = parser.parse_args()
 
     # If --log is passed, enable logging
-    if args.log:
-        # Configure the logger (by default, it won't log anything)
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.CRITICAL)
-        log_level = getattr(logging, args.log_level)
-        setup_logging(log_level)
-        logger.info("Logging Enabled")
-        import pandas as pd
-        import time
 
     # Run the main function
-    main(args.BaseQRData)
