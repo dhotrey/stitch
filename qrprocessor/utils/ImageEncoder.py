@@ -29,6 +29,7 @@ def makeimage(QRMatrix : list,
     # Adjustment Ratio = 20% of Blocksize
     adjustmentRatio = math.ceil(0.2*Blocksize) #TODO change later
     colour_black = (0,0,0)
+    colour_offwhite = (240,240,240)
     #colour_white = (255, 255, 255) #TODO
     
     # Create a blank white image as a NumPy array
@@ -36,7 +37,8 @@ def makeimage(QRMatrix : list,
     img_array = np.full((img_size, img_size, 3), 255, dtype=np.uint8)  # White background
 
     # Precompute the color for black pixels
-    black_color = np.array(colour_black, dtype=np.uint8)
+    black_colour = np.array(colour_black, dtype=np.uint8)
+    endembed_colour = np.array(colour_offwhite, dtype=np.uint8)
 
     for y in range(LenofQRMatrix):
         for x in range(LenofQRMatrix):
@@ -50,13 +52,15 @@ def makeimage(QRMatrix : list,
                 if QRMatrix[y][x][0] == 1:  # Black pixel
                     # Adjust the block size for data embedding
                     end_x += adjustmentRatio
-                    img_array[start_y:end_y, start_x:end_x] = black_color
+                    img_array[start_y:end_y, start_x:end_x] = black_colour
                 else:
                     # Render a normal block
-                    img_array[start_y:end_y, start_x:end_x] = black_color
+                    img_array[start_y:end_y, start_x:end_x] = black_colour
+            elif QRMatrix[y][x][1] == 2: #If pixel is marked as end of embed
+                img_array[start_y:end_y, start_x:end_x] = endembed_colour
             elif QRMatrix[y][x][0] == 1:
                 # Render a normal block
-                img_array[start_y:end_y, start_x:end_x] = black_color
+                img_array[start_y:end_y, start_x:end_x] = black_colour
 
     # Convert the NumPy array to a PIL image
     img = Image.fromarray(img_array, 'RGB')
@@ -64,7 +68,7 @@ def makeimage(QRMatrix : list,
     img = add_quiet_zone(img,Blocksize)
     
     # Output format -> output0.png
-    img.save(f'Output/{UniqueFolder}/img{imgIteration}.png')
+    img.save(f'Output/{UniqueFolder}/{imgIteration}.png')
 
 def main(QRMatrix : list,
          LenofMatrix : int,
@@ -81,9 +85,25 @@ def main(QRMatrix : list,
     # Blocksize -> int -> Defines the pixel size of each module of a qr code
     # BitData -> str -> Bit Data that has to be embed in the base qr code
 
-    # Using the Co-ordinates derived from method DeriveBlockAdjustmentCoord we mark each cell for block widening
-    for bit,CoordPair in zip(BitData,VBACoordLst):
-        if bit == "1":
-            QRMatrix[CoordPair[0]][CoordPair[1]][1] = 1
+    # Code to ensure that it ends when the data to embed is less than the number of spaces where it
+    # can embed
+    for CoordPair in VBACoordLst:
+        if len(BitData) != 0:
+            bit = BitData[0]
+            BitData = BitData[1:]
+            if bit == "1":
+                QRMatrix[CoordPair[0]][CoordPair[1]][1] = 1
+        else:
+            QRMatrix[CoordPair[0]][CoordPair[1]+1][1] = 2
+            import pandas as pd
+            df = pd.DataFrame(QRMatrix)
+            print(f"Base QR Code Visualized\n{df}")
+            break
+
+
+    # # Using the Co-ordinates derived from method DeriveBlockAdjustmentCoord we mark each cell for block widening
+    # for bit,CoordPair in zip(BitData,VBACoordLst):
+    #     if bit == "1":
+    #         QRMatrix[CoordPair[0]][CoordPair[1]][1] = 1
 
     makeimage(QRMatrix,LenofMatrix,UniqueFolder,Blocksize,imgIteration)
