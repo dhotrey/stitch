@@ -315,7 +315,6 @@ if __name__ == "__main__":
     # If --log is passed, enable logging
 
     # Run the main function
-
     QRMatrix, LenofQRMatrix, ViableBlockAltCoordLst, UniqueFolder = main("pinac")
     import utils.ImageEncoder
 

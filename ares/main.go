@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/charmbracelet/log"
 	"github.com/redis/go-redis/v9"
@@ -25,13 +27,23 @@ func main() {
 	done := make(chan bool)
 	rdbChan := make(chan *redis.Client)
 	go utils.ConnectToRedis(done, rdbChan)
-	const CHUNK_SIZE = 3000 // TODO : make this configurable
+	var ctx = context.Background()
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	// const CHUNK_SIZE = 3000 // TODO : make this configurable
+	csize := rdb.Get(ctx, "ChunkingSize")
+	CHUNK_SIZE := csize.Val()
 	log.Info(utils.GetLogo())
 	log.Info("Starting Ares . . . ")
 	log.Info("Ares is running in ", "mode", log.GetLevel())
 	log.Info("Setting chunk size", "chunkSize", CHUNK_SIZE)
 	data, err := utils.GetData()
-	data.ChunkSize = CHUNK_SIZE
+	CHUNK_SIZE_INT, err := strconv.Atoi(CHUNK_SIZE)
+	if err != nil {
+		log.Fatal("Failed to fetch chunk size from redis")
+	}
+	data.ChunkSize = CHUNK_SIZE_INT
 	if err != nil {
 		log.Error("Something went wrong fetching the data", "Error", err)
 	}
@@ -47,7 +59,7 @@ func main() {
 	log.Info("SHA256 of compressed data", "compressedDataHash", data.CompressedDataSHA256)
 	data.CompressionRatio = (float64(len(data.CompressedData)) / float64(len(data.Data))) * 100
 	log.Info("Data size decreased by", "compressionRatio", data.CompressionRatio)
-	log.Info("Chunking the data into chunks of", "size", CHUNK_SIZE)
+	log.Info("Chunking the data into chunks of", "size", CHUNK_SIZE_INT)
 	data.DataChunks = shredder.Shred(data)
 	chunks := data.DataChunks
 	data.TotalChunks = len(chunks)
@@ -56,7 +68,7 @@ func main() {
 	if log.GetLevel() == log.DebugLevel {
 		log.Debug("verifying chunking . . .")
 		log.Debug("Size of last chunk", "lastChunkSize", len(chunks[len(chunks)-1]))
-		formulaCalculation := CHUNK_SIZE*(len(chunks)-1) + len(chunks[len(chunks)-1])
+		formulaCalculation := CHUNK_SIZE_INT*(len(chunks)-1) + len(chunks[len(chunks)-1])
 		log.Debug("verifying ", "formula", "chunkSize * (numberOfChunks -1) + lastChunkSize == compressedDataSize")
 		log.Debug("verifying", "formulaCalculation", formulaCalculation, "compressedDataSize", len(data.CompressedData))
 		log.Debug("verifying", "verificationSuccessful", formulaCalculation == len(data.CompressedData))

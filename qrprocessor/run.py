@@ -45,7 +45,6 @@ if __name__ == "__main__":
     result = subprocess.run("./ares", capture_output=True, text=True)
     print("finished chunker execution")
     print(f"Return code {result.returncode}")
-
     data = ReadChunkData()
 
     Len_MaxBitsPerQR = len(ViableBlockAltCoordLst)
