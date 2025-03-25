@@ -1,6 +1,7 @@
 import pandas as pd
-import argparse
-
+import time
+import os
+import glob
 
 from utils.Cornors import Cornors
 from utils.DecodeQR import DecodeImageAruco
@@ -8,7 +9,7 @@ from utils.DecodeQR import VerifyQR
 from utils.DecodeQR import getSecretDataQR as SD
 
 
-def main(ImagePath:str, tolerance=10):
+def main(ImagePath:str, tolerance=1):
 
     DI = DecodeImageAruco(ImagePath)
     
@@ -42,12 +43,12 @@ def main(ImagePath:str, tolerance=10):
     QRVersion = temp[0]
     BlockSize = temp[1]
     QRMatrix = VerifyQR.getQRMatrix(QRVersion)
-    print(pd.DataFrame(QRMatrix))
-    print("Top Left Coord -",Coord_topleft)
-    print("Top Right Coord -",Coord_topright)
-    print("Bottom Left Coord -",Coord_bottomleft)
-    print("Bottom Right Coord -",Coord_bottomright)
-    print("QR Version - ",QRVersion)
+    # print(pd.DataFrame(QRMatrix))
+    # print("Top Left Coord -",Coord_topleft)
+    # print("Top Right Coord -",Coord_topright)
+    # print("Bottom Left Coord -",Coord_bottomleft)
+    # print("Bottom Right Coord -",Coord_bottomright)
+    # print("QR Version - ",QRVersion)
     SecretData = ""
     temp = []
     Center_of_Block = (int(BlockSize/2),int(BlockSize/2))
@@ -70,26 +71,44 @@ def main(ImagePath:str, tolerance=10):
                             SecretData += "1"
                         if Adjacent_topLeft_Colour >= 255-tolerance:
                             SecretData += "0"
-    print("\nSecret Data Found at Co-ordinates",temp)
-    print("\nDecode Binary Data\n",SecretData)
+                    # Check if Adjacent Block is Grey
+                    if SD.getPixelColour(img,(BlockCoord[0]+BlockSize+Center_of_Block[0],
+                                            BlockCoord[1]+Center_of_Block[1])) == 240:
+                        return SecretData
+
+    return SecretData
+    # print("\nSecret Data Found at Co-ordinates",temp)
+    # print("\nDecode Binary Data\n",SecretData)
                               
                         
 # TESTING PURPOSES
 if __name__ == '__main__':
-    # Create an argument parser
-    parser = argparse.ArgumentParser(description="Main QR Decoder Script")
+    # Define input folder
+    input_folder = "InputFolder"
 
-    # Add the --BaseQRData option. This argument will pass the input data and generate QR Base QR Code
-    # If no --BaseQRData is mentioned then default value will be used
-    parser.add_argument(
-        "--InputImgFile",
-        type=str,
-        default="output.png",
-        help="Input File Location for decoding",
-    )
+    # TODO
+    # Add Code to convert gif to images and place all images in {input_folder}
 
-    # Parse the command-line arguments
-    args = parser.parse_args()
+    # Get all image files in the folder
+    qr_images = glob.glob(os.path.join(input_folder, "*.png"))
 
-    # Run the main function
-    main(args.InputImgFile)
+    # Sort files numerically
+    qr_images.sort(key=lambda x: int(os.path.basename(x).split('.')[0]))
+
+    SecretDataList = []
+    timerstart = time.time()
+    for img_path in qr_images:
+        print(f"Processing QR Code: {img_path}", end='\r')
+        SecretDataList.append(main(img_path))
+    timerend = time.time()
+    print(f"\nTime Taken: {timerend-timerstart} sec")
+
+    # TODO
+    # Write all the bit data to redis
+    # Variable to write to redis -> {SecretDataList}
+    # Variable Type -> List -> [1010, 0101, ....]
+ 
+    # TODO
+    # Convert Bits back to original data
+
+    

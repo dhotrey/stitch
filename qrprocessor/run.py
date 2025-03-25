@@ -18,6 +18,7 @@ gif.go/ mp4.go -> Converts the aforementioned imgs in the folder to a gif or mp4
 
 import redis
 import subprocess
+from copy import deepcopy
 
 import setup
 from utils.ImageEncoder import main as ImageEncoder
@@ -39,24 +40,33 @@ if __name__ == "__main__":
     # # Set Secret Data to Redis
     # rdb.set("SecretData", SecretData)
     rdb.set("ChunkingSize", len(ViableBlockAltCoordLst))
-
+    rdb.set("UniqueFolder",UniqueFolder)
+    
     result = subprocess.run("./ares", capture_output=True, text=True)
     print("finished chunker execution")
     print(f"Return code {result.returncode}")
-
     data = ReadChunkData()
 
+    Len_MaxBitsPerQR = len(ViableBlockAltCoordLst)
+    i = 0
     # Run for loop to generate qr codes
-    for i, d in enumerate(data):
-        ImageEncoder(
-            QRMatrix,
-            LenofQRMatrix,
-            ViableBlockAltCoordLst,
-            UniqueFolder,
-            i,
-            BlockSize,
-            d,
-        )
+    for d in data:
+        d = ''.join(f'{byte:08b}' for byte in d)
+        while d: # Time complexity n^2 cause aryan doesnt remember his own code
+            chunk = d[:Len_MaxBitsPerQR]
+            d = d[Len_MaxBitsPerQR:]
+            print(chunk)
+            ImageEncoder(
+                deepcopy(QRMatrix),
+                LenofQRMatrix,
+                ViableBlockAltCoordLst,
+                UniqueFolder,
+                i,
+                BlockSize,
+                chunk,
+            )
+            i += 1
 
     # Run conversion to gif
+    # All images wrote to a designated folder, whose location is written in redis as UniqueFolder
     # TODO

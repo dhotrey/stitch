@@ -273,7 +273,7 @@ def main(BaseQRData: str = "BaseQRCode"):
     #     chunk = SecretData[:Len_MaxBitsPerQR]
     #     SecretData = SecretData[Len_MaxBitsPerQR:]
 
-    #     ImageEncoder.main(deepcopy(QRMatrix),LenofQRMatrix,ViableBlockAltCoordLst,UniqueFolder,iteration,100,chunk)
+    # ImageEncoder.main(deepcopy(QRMatrix),LenofQRMatrix,ViableBlockAltCoordLst,UniqueFolder,iteration,100,chunk)
 
     #     iteration += 1
     # # encoderWorker.main(deepcopy(QRMatrix),LenofQRMatrix,ViableBlockAltCoordLst,0,100)
@@ -315,3 +315,7 @@ if __name__ == "__main__":
     # If --log is passed, enable logging
 
     # Run the main function
+    QRMatrix, LenofQRMatrix, ViableBlockAltCoordLst, UniqueFolder = main("pinac")
+    import utils.ImageEncoder
+
+    utils.ImageEncoder.main(QRMatrix, LenofQRMatrix, ViableBlockAltCoordLst, UniqueFolder, 0, 100)
