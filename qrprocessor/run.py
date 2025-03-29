@@ -40,8 +40,8 @@ if __name__ == "__main__":
     # # Set Secret Data to Redis
     # rdb.set("SecretData", SecretData)
     rdb.set("ChunkingSize", len(ViableBlockAltCoordLst))
-    rdb.set("UniqueFolder",UniqueFolder)
-    
+    rdb.set("UniqueFolder", UniqueFolder)
+
     result = subprocess.run("./ares", capture_output=True, text=True)
     print("finished chunker execution")
     print(f"Return code {result.returncode}")
@@ -51,8 +51,8 @@ if __name__ == "__main__":
     i = 0
     # Run for loop to generate qr codes
     for d in data:
-        d = ''.join(f'{byte:08b}' for byte in d)
-        while d: # Time complexity n^2 cause aryan doesnt remember his own code
+        d = "".join(f"{byte:08b}" for byte in d)
+        while d:  # Time complexity n^2 cause aryan doesnt remember his own code
             chunk = d[:Len_MaxBitsPerQR]
             d = d[Len_MaxBitsPerQR:]
             print(chunk)
@@ -67,6 +67,24 @@ if __name__ == "__main__":
             )
             i += 1
 
-    # Run conversion to gif
-    # All images wrote to a designated folder, whose location is written in redis as UniqueFolder
-    # TODO
+    print("Created gifs successfully!!!")
+    print("\n\n\n\n")
+    print("Creating GIF")
+    qrFolder = f"Output/{UniqueFolder}"
+    gifResult = subprocess.run(
+        [
+            "ffmpeg",
+            "-framerate",
+            "5",
+            "-i",
+            f"{qrFolder}/%d.png",
+            "-vf",
+            "scale=640:-1",
+            "-loop",
+            "0",
+            "output.gif",
+        ]
+    )
+
+    print("finished gif creation")
+    print(f"Return code {gifResult.returncode}")

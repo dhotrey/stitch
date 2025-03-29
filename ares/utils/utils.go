@@ -94,7 +94,7 @@ func GetData() (Data, error) {
 	if err != nil {
 		return d, err
 	}
-	d.FileName = "bee-movie-script.txt" // TODO : Change this later to not hardcode filename
+	d.FileName = "payload.txt" // TODO : Change this later to not hardcode filename
 	log.Debug("File size using length of byte array", "size", len(d.Data))
 	if log.GetLevel() == log.DebugLevel {
 		fileInfo, err := os.Stat(fmt.Sprintf("tests/%s", d.FileName))
