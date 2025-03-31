@@ -45,6 +45,7 @@ func (d *Data) WriteToRedis(rdb *redis.Client) {
 	key := func(k string) string { return fmt.Sprintf("%s-%s", id, k) }
 
 	set("FileName", d.FileName)
+	set("secretData", d.Data)
 	set(key("InitialSize"), d.InitialSize)
 	set(key("CompressedSize"), d.CompressedSize)
 	set(key("CompressionRatio"), d.CompressionRatio)
@@ -94,7 +95,7 @@ func GetData() (Data, error) {
 	if err != nil {
 		return d, err
 	}
-	d.FileName = "payload.txt" // TODO : Change this later to not hardcode filename
+	d.FileName = "payload.txt"
 	log.Debug("File size using length of byte array", "size", len(d.Data))
 	if log.GetLevel() == log.DebugLevel {
 		fileInfo, err := os.Stat(fmt.Sprintf("tests/%s", d.FileName))
