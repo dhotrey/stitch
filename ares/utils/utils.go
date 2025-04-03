@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -74,28 +75,28 @@ func (d *Data) WriteToRedis(rdb *redis.Client) {
 }
 
 func getPayload() ([]byte, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, err
+	if len(os.Args) == 2 {
+		dat, err := os.ReadFile(os.Args[1])
+		if err != nil {
+			log.Errorf("Error reading file passed in cli args %s", os.Args[1])
+			return nil, err
+		}
+		return dat, nil
 	}
-	log.Debug("Current working directory", "cwd", cwd)
-	dat, err := os.ReadFile("tests/payload.txt")
-	// dat, err := os.ReadFile("tests/bee-movie-script.txt")
-	if err != nil {
-		return nil, err
-	}
-	log.Debug("Getting the bee movie script")
-	return dat, nil
+	noArgPassedErr := errors.New("Payload file missing")
+	log.Error("No cli args passed to ares")
+	log.Fatal("Sample Usage: ares <file>")
+	return nil, noArgPassedErr
 }
 
 func GetData() (Data, error) {
 	d := Data{}
 	var err error
-	d.Data, err = getPayload() // TODO : change this to actual data source later
+	d.Data, err = getPayload()
 	if err != nil {
 		return d, err
 	}
-	d.FileName = "payload.txt"
+	d.FileName = os.Args[1]
 	log.Debug("File size using length of byte array", "size", len(d.Data))
 	if log.GetLevel() == log.DebugLevel {
 		fileInfo, err := os.Stat(fmt.Sprintf("tests/%s", d.FileName))

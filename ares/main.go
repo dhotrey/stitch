@@ -41,7 +41,9 @@ func main() {
 	data, err := utils.GetData()
 	CHUNK_SIZE_INT, err := strconv.Atoi(CHUNK_SIZE)
 	if err != nil {
-		log.Fatal("Failed to fetch chunk size from redis")
+		log.Error("Failed to fetch chunk size from redis")
+		log.Info("Setting default chunk size to 3000")
+		CHUNK_SIZE_INT = 3000
 	}
 	data.ChunkSize = CHUNK_SIZE_INT
 	if err != nil {
