@@ -1,36 +1,31 @@
 package main
 
 import (
-	"context"
+	"constructor/pkg"
 	"fmt"
 	"os"
-	"time"
-
-	"github.com/briandowns/spinner"
-	"github.com/redis/go-redis/v9"
 )
 
 func main() {
-	var ctx = context.Background()
-	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
-	decodedRedis := rdb.Get(ctx, "secretData")
-	outFileName := fmt.Sprintf("decoded")
+	err := os.Mkdir("decoded_outputs", 0755)
+	if err != nil {
+		if !os.IsExist(err) {
+			fmt.Println("Something went wrong creating decoded_outputs dir")
+			fmt.Println(err)
+			return
+		}
+	}
+	outFileName := fmt.Sprintf("decoded_outputs/decoded_data")
 	file, err := os.Create(outFileName)
-
-	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
-	s.Prefix = "Constructing original file . . . . "
-	s.Start()
-	time.Sleep(time.Second * 5)
-	s.Stop()
+	defer file.Close()
 
 	if err != nil {
 		fmt.Printf("Error creating decoded file %s", err)
 		os.Exit(1)
 	}
-	defer file.Close()
-	n, err := file.Write([]byte(decodedRedis.String()))
+	constructedData := pkg.ConstructData()
+
+	n, err := file.Write([]byte(constructedData.String()))
 	if err != nil {
 		fmt.Printf("Error writing to decoded file : %s", err)
 		os.Exit(1)
