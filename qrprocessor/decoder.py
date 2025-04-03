@@ -4,7 +4,6 @@ import glob
 import subprocess
 import redis
 
-from utils.Cornors import Cornors
 from utils.DecodeQR import DecodeImageAruco
 from utils.DecodeQR import VerifyQR
 from utils.DecodeQR import getSecretDataQR as SD
@@ -17,16 +16,6 @@ def main(ImagePath: str, tolerance=1):
     img, imgSize, Coord_topleft, Coord_topright, Coord_bottomleft, Coord_bottomright = (
         DI.getValues()
     )
-
-    # Verify QR Code Coordinates # checks not necesary anymore.
-    # if VerifyQR.isPointOnQRCode(img, Coord_topleft, Cornors.TopLeft) is False:
-    #     pass
-    # if VerifyQR.isPointOnQRCode(img, Coord_topright, Cornors.TopRight) is False:
-    #     pass
-    # if VerifyQR.isPointOnQRCode(img, Coord_bottomleft, Cornors.BottomLeft) is False:
-    #     pass
-    # if VerifyQR.isPointOnQRCode(img, Coord_bottomright, Cornors.BottomRight) is False:
-    #     pass
 
     # We have to add 1 here cause of the length of coordinates is lower by 1 due to coordinates starting from 0
     Length_QR = 1 + int(
@@ -49,12 +38,7 @@ def main(ImagePath: str, tolerance=1):
     QRVersion = temp[0]
     BlockSize = temp[1]
     QRMatrix = VerifyQR.getQRMatrix(QRVersion)
-    # print(pd.DataFrame(QRMatrix))
-    # print("Top Left Coord -",Coord_topleft)
-    # print("Top Right Coord -",Coord_topright)
-    # print("Bottom Left Coord -",Coord_bottomleft)
-    # print("Bottom Right Coord -",Coord_bottomright)
-    # print("QR Version - ",QRVersion)
+
     SecretData = ""
     temp = []
     Center_of_Block = (int(BlockSize / 2), int(BlockSize / 2))
@@ -114,8 +98,6 @@ def main(ImagePath: str, tolerance=1):
                         return SecretData
 
     return SecretData
-    # print("\nSecret Data Found at Co-ordinates",temp)
-    # print("\nDecode Binary Data\n",SecretData)
 
 
 # TESTING PURPOSES
@@ -164,6 +146,6 @@ if __name__ == "__main__":
     print("written decoded data stream to redis successfully")
     print("constructing file from chunks")
 
-    constructRes = subprocess.run("./constructor")
-    print("Constructed original file successfully , content saved to decoded file")
+    constructRes = subprocess.run("./bin/constructor")
+    print("Constructed original file successfully , content saved to decoded_outputs/decoded file")
     print(f"return code {constructRes.returncode}")

@@ -28,6 +28,7 @@ if __name__ == "__main__":
     BlockSize = 100
 
     BaseQRData = input("Enter Base QR Code Data: ")
+    inFile = input("Enter path to input file: ")
     # SecretData = input("Enter Secret Data to Embed: ")
 
     rdb = redis.Redis()
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     rdb.set("ChunkingSize", len(ViableBlockAltCoordLst))
     rdb.set("UniqueFolder", UniqueFolder)
 
-    result = subprocess.run("./ares", capture_output=True, text=True)
+    result = subprocess.run(["./bin/ares", inFile], capture_output=True, text=True)
     print("finished chunker execution")
     print(f"Return code {result.returncode}")
     data = ReadChunkData()
