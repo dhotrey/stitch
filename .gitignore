@@ -212,3 +212,5 @@ tests
 Output
 demos
 *.rdb
+
+decoded_outputs/*
