@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/charmbracelet/log v0.4.0
-	github.com/redis/go-redis/v9 v9.6.1
+	github.com/redis/go-redis/v9 v9.6.3
 	github.com/ulikunitz/xz v0.5.12
 )
 
